@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bitstream Multiply Lab</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1a237e;
+      --muted: #5c6bc0;
+      --line: #c5cae9;
+      --accent: #3949ab;
+      --one: #43a047;
+      --zero: #e8eaf6;
+      --warn: #ef6c00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 1rem 1.25rem 1.5rem;
+    }
+    h1 {
+      font-size: 1.15rem;
+      margin: 0 0 0.35rem;
+    }
+    p.lead {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .grid {
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+    label span.val { color: var(--accent); font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.75rem;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .bits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 0.45rem;
+      min-height: 1.6rem;
+    }
+    .bit {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: var(--zero);
+      border: 1px solid var(--line);
+    }
+    .bit.on { background: var(--one); border-color: #2e7d32; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .metric {
+      background: #eef1fb;
+      border-radius: 8px;
+      padding: 0.55rem 0.65rem;
+    }
+    .metric .k { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .metric .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .note {
+      margin-top: 0.85rem;
+      font-size: 0.82rem;
+      color: var(--warn);
+      line-height: 1.4;
+    }
+    .stream-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.65rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Unipolar bitstream multiply (AND)</h1>
+  <p class="lead">
+    Independent Bernoulli streams with means <em>A</em> and <em>B</em> are multiplied with a bitwise AND.
+    The product estimate is the density of 1s over <em>N</em> cycles. Toggle “correlate” to share one RNG — the bias appears immediately.
+  </p>
+
+  <div class="grid">
+    <div class="card">
+      <label>Probability A <span class="val" id="aVal">0.75</span></label>
+      <input id="a" type="range" min="0" max="100" value="75">
+
+      <label style="margin-top:0.85rem">Probability B <span class="val" id="bVal">0.50</span></label>
+      <input id="b" type="range" min="0" max="100" value="50">
+
+      <label style="margin-top:0.85rem">Stream length N <span class="val" id="nVal">64</span></label>
+      <input id="n" type="range" min="8" max="256" step="8" value="64">
+
+      <div class="row">
+        <label style="margin:0; font-weight:500">
+          <input id="corr" type="checkbox"> Correlated (same RNG)
+        </label>
+        <button id="resample" type="button">Resample</button>
+        <button id="auto" class="secondary" type="button">Auto-run</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="metrics">
+        <div class="metric"><div class="k">True product A×B</div><div class="v" id="trueP">0.3750</div></div>
+        <div class="metric"><div class="k">Estimate Â</div><div class="v" id="estP">—</div></div>
+        <div class="metric"><div class="k">Absolute error</div><div class="v" id="err">—</div></div>
+        <div class="metric"><div class="k">Density of AND</div><div class="v" id="dens">—</div></div>
+      </div>
+      <p class="note" id="hint">Independent SNGs: E[A∧B]=A·B. Shared RNG with A=B yields E[A∧B]=A (not A²).</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0.85rem">
+    <div class="stream-label">Stream A</div>
+    <div class="bits" id="bitsA"></div>
+    <div class="stream-label">Stream B</div>
+    <div class="bits" id="bitsB"></div>
+    <div class="stream-label">A ∧ B</div>
+    <div class="bits" id="bitsAnd"></div>
+  </div>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+    let timer = null;
+
+    function renderBits(node, arr) {
+      node.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      for (const v of arr) {
+        const d = document.createElement("div");
+        d.className = "bit" + (v ? " on" : "");
+        frag.appendChild(d);
+      }
+      node.appendChild(frag);
+    }
+
+    function sample() {
+      const a = el("a").valueAsNumber / 100;
+      const b = el("b").valueAsNumber / 100;
+      const n = el("n").valueAsNumber;
+      const correlated = el("corr").checked;
+
+      el("aVal").textContent = a.toFixed(2);
+      el("bVal").textContent = b.toFixed(2);
+      el("nVal").textContent = String(n);
+
+      const streamA = [];
+      const streamB = [];
+      const streamAnd = [];
+      let ones = 0;
+
+      for (let i = 0; i < n; i++) {
+        const r = Math.random();
+        const bitA = r < a ? 1 : 0;
+        const bitB = (correlated ? r : Math.random()) < b ? 1 : 0;
+        const bitAnd = bitA & bitB;
+        streamA.push(bitA);
+        streamB.push(bitB);
+        streamAnd.push(bitAnd);
+        ones += bitAnd;
+      }
+
+      const est = ones / n;
+      const truth = a * b;
+      el("trueP").textContent = truth.toFixed(4);
+      el("estP").textContent = est.toFixed(4);
+      el("err").textContent = Math.abs(est - truth).toFixed(4);
+      el("dens").textContent = `${ones} / ${n}`;
+      el("hint").textContent = correlated
+        ? "Correlated mode shares one uniform draw per cycle — products are biased (try A=B=0.5: estimate drifts toward 0.5, not 0.25)."
+        : "Independent SNGs: E[A∧B]=A·B. Shared RNG with A=B yields E[A∧B]=A (not A²).";
+
+      renderBits(el("bitsA"), streamA);
+      renderBits(el("bitsB"), streamB);
+      renderBits(el("bitsAnd"), streamAnd);
+    }
+
+    ["a", "b", "n", "corr"].forEach((id) => el(id).addEventListener("input", sample));
+    el("resample").addEventListener("click", sample);
+    el("auto").addEventListener("click", () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+        el("auto").textContent = "Auto-run";
+        return;
+      }
+      el("auto").textContent = "Stop";
+      timer = setInterval(sample, 350);
+    });
+
+    sample();
+  </script>
+</body>
+</html>

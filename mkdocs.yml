@@ -1,0 +1,86 @@
+site_name: Probabilistic Computing Learning & Research Portal
+site_description: Open-access educational portal for stochastic computing, bitstream arithmetic, and probabilistic (p-bit) hardware — citation-safe learning pages with DOI links.
+site_author: SJTU Yongfu Research Group
+site_url: https://probabilistic-computing.github.io/public/
+copyright: Prepared by Yongfu Li and research group
+
+repo_name: Probabilistic-Computing/public
+repo_url: https://github.com/Probabilistic-Computing/public
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+extra:
+  generator: false
+
+markdown_extensions:
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
+  - stylesheets/math.css
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+nav:
+  - Home: index.md
+  - Glossary: glossary.md
+  - 🎓 Fundamentals:
+      - Why Probabilistic Computing?: fundamentals/why-probabilistic-computing.md
+      - History & Evolution: fundamentals/history-and-evolution.md
+      - Motivations & Grand Challenges: fundamentals/motivations-and-challenges.md
+      - Bitstream Encoding Made Easy: fundamentals/bitstream-encoding.md
+      - Correlation & Independence: fundamentals/correlation-and-independence.md
+      - Error, Precision & Latency: fundamentals/error-precision-latency.md
+  - 🌉 Bridge to Real World:
+      - Why AI Tolerates Bit Noise: bridge/ai-and-bitstream-math.md
+      - Imaging, DSP & Coding: bridge/imaging-dsp-coding.md
+  - ⚙️ Hardware Taxonomies:
+      - Stochastic Arithmetic: taxonomy/stochastic-arithmetic.md
+      - Number Generators (RNG / SNG): taxonomy/number-generators.md
+      - Neural Networks & Learning: taxonomy/neural-networks.md
+      - Coding & Communications: taxonomy/coding-communications.md
+      - Invertible & p-bit Logic: taxonomy/pbit-invertible.md
+      - Fault Tolerance: taxonomy/fault-tolerance.md
